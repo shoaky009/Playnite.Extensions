@@ -29,6 +29,17 @@ public class FanzaGameScrapper : IScrapper
     private readonly ILogger<FanzaGameScrapper> _logger;
     private readonly IConfiguration _configuration;
 
+    private static List<WordReplacement> wordsReplacements = new()
+    {
+        new WordReplacement("奴●", "奴隷"),
+        new WordReplacement("痴●", "痴漢"),
+        new WordReplacement("凌●", "凌辱"),
+        new WordReplacement("輪●", "輪姦"),
+        new WordReplacement("折●", "折檻"),
+        new WordReplacement("女子●生", "女子校生"),
+
+    };
+
     public FanzaGameScrapper(ILogger<FanzaGameScrapper> logger)
     {
         _logger = logger;
@@ -53,10 +64,23 @@ public class FanzaGameScrapper : IScrapper
         messageHandler.UseCookies = true;
     }
 
+    private static string ReplaceWords(string input, bool reverse = false)
+    {
+        var output = input;
+        foreach (var replacement in wordsReplacements)
+        {
+            output = reverse
+                ? output.Replace(replacement.OriginalWord, replacement.MaskedWord)
+                : output.Replace(replacement.MaskedWord, replacement.OriginalWord);
+        }
+
+        return output;
+    }
 
     public async Task<List<SearchResult>> ScrapSearchPage(string searchName,
         CancellationToken cancellationToken = default)
     {
+        searchName = ReplaceWords(searchName, true);
         var url = BaseSearchUrl + Uri.EscapeUriString(searchName);
         var context = BrowsingContext.New(_configuration);
         var document = await context.OpenAsync(url, cancellationToken);
@@ -124,7 +148,12 @@ public class FanzaGameScrapper : IScrapper
         };
         if (link.StartsWith(BaseGamePageUrl, StringComparison.OrdinalIgnoreCase))
         {
-            result.Title = document.QuerySelector(".productTitle__item")?.Text().Trim();
+            var title = document.QuerySelector(".productTitle__item")?.Text().Trim();
+            if (title != null)
+            {
+                result.Title = ReplaceWords(title);
+            }
+
             var detailTop = document.QuerySelectorAll(".contentsDetailTop__tableRow")
                 .GroupBy(x => x.Children.First().Text().Trim())
                 .ToDictionary(x => x.Key, x => x.First().Children.Last().Text().Trim());
@@ -144,12 +173,6 @@ public class FanzaGameScrapper : IScrapper
             {
                 result.Rating = rating.Value;
             }
-
-            // const string ratingPrefix = "d-rating-";
-            // result.Rating = document.QuerySelector(".review div")!.ClassList
-            //     .Where(className => className.StartsWith(ratingPrefix))
-            //     .Select(className => className.Replace(ratingPrefix, ""))
-            //     .Select(rating => double.Parse(rating) / 10D).First();
 
             result.Description = document.GetElementById("detailGuide")?.OuterHtml.Trim();
 
@@ -180,15 +203,14 @@ public class FanzaGameScrapper : IScrapper
             if (detailBottom.ContainsKey("シリーズ"))
             {
                 var series = detailBottom["シリーズ"]?.Text().Trim();
-                if (!noneVal.Equals(series))
+                if (!noneVal.Equals(series) && series != null)
                 {
-                    result.Series = series;
+                    result.Series = ReplaceWords(series);
                 }
             }
 
             var tags = detailBottom["ジャンル"]?.GetElementsByTagName("a")
                 .Select(x => x.Text().Trim())
-                .Where(x => !x.Contains("感謝祭"))
                 .ToList();
             result.Genres = tags;
 
@@ -334,17 +356,25 @@ public class FanzaGameScrapper : IScrapper
 
     private class Product
     {
-        [JsonProperty("@type")]
-        public string? Type { get; set; }
-        [JsonProperty("aggregateRating")]
-        public AggregateRating? AggregateRating { get; set; }
+        [JsonProperty("@type")] public string? Type { get; set; }
+        [JsonProperty("aggregateRating")] public AggregateRating? AggregateRating { get; set; }
     }
 
     private class AggregateRating
     {
-        [JsonProperty("@type")]
-        public string? Type { get; set; }
-        [JsonProperty("ratingValue")]
-        public string? RatingValue { get; set; }
+        [JsonProperty("@type")] public string? Type { get; set; }
+        [JsonProperty("ratingValue")] public string? RatingValue { get; set; }
+    }
+
+    private class WordReplacement
+    {
+        public WordReplacement(string maskedWord, string originalWord)
+        {
+            MaskedWord = maskedWord;
+            OriginalWord = originalWord;
+        }
+
+        public string MaskedWord { get; set; }
+        public string OriginalWord { get; set; }
     }
 }
