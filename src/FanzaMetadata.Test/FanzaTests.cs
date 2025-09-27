@@ -120,7 +120,7 @@ public class FanzaTests
     public async void ShouldGetScrapperResult2()
     {
         var scrapper = new FanzaGameScrapper(new XunitLogger<FanzaGameScrapper>(_testOutputHelper));
-        var searchRes = await scrapper.ScrapSearchPage("美少女万華鏡 呪われし伝説の少女");
+        var searchRes = await scrapper.ScrapSearchPage("隷従の制服");
         Assert.NotEmpty(searchRes);
 
         var res = await scrapper.ScrapGamePage(searchRes.First());

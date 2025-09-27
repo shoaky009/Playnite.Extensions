@@ -168,16 +168,22 @@ public class FanzaGameScrapper : IScrapper
             }
 
             const string noneVal = "----";
-            var gameGenre = detailBottom["ゲームジャンル"]?.Text().Trim();
-            if (!noneVal.Equals(gameGenre))
+            if (detailBottom.ContainsKey("ゲームジャンル"))
             {
-                result.GameGenre = gameGenre;
+                var gameGenre = detailBottom["ゲームジャンル"]?.Text().Trim();
+                if (!noneVal.Equals(gameGenre))
+                {
+                    result.GameGenre = gameGenre;
+                }
             }
 
-            var series = detailBottom["シリーズ"]?.Text().Trim();
-            if (!noneVal.Equals(series))
+            if (detailBottom.ContainsKey("シリーズ"))
             {
-                result.Series = series;
+                var series = detailBottom["シリーズ"]?.Text().Trim();
+                if (!noneVal.Equals(series))
+                {
+                    result.Series = series;
+                }
             }
 
             var tags = detailBottom["ジャンル"]?.GetElementsByTagName("a")
