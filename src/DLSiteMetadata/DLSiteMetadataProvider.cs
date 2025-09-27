@@ -140,6 +140,10 @@ public class DLSiteMetadataProvider : OnDemandMetadataProvider
         if (result is null) return base.GetDevelopers(args);
 
         var staff = new List<string>();
+        if (result.Author is not null)
+        {
+            staff.Add(result.Author);
+        }
         if (result.Illustrators is not null && _settings.IncludeIllustrators)
         {
             staff.AddRange(result.Illustrators);

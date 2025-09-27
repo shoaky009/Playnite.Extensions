@@ -143,8 +143,8 @@ public class Scrapper
                 newHtml = newHtml.Replace("<a href=\"//", "<a href=\"https://");
                 descriptionHtml += newHtml;
             }
-
         }
+
         res.DescriptionHtml = descriptionHtml;
 
         var imageMatches = _imageLinkRegex.Matches(descriptionHtml);
@@ -271,6 +271,13 @@ public class Scrapper
                                 .Select(x => x.Text().CustomTrim())
                                 .ToList();
                         }
+                        else if (headerName.Equals("Author", StringComparison.OrdinalIgnoreCase) ||
+                                 headerName.Equals("作者", StringComparison.OrdinalIgnoreCase) ||
+                                 headerName.Equals("作者", StringComparison.OrdinalIgnoreCase) ||
+                                 headerName.Equals("저자", StringComparison.OrdinalIgnoreCase))
+                        {
+                            res.Author = dataElement.Text().CustomTrim();
+                        }
                         else if (headerName.Equals("Voice Actor", StringComparison.OrdinalIgnoreCase) ||
                                  headerName.Equals("声優", StringComparison.OrdinalIgnoreCase) ||
                                  headerName.Equals("声优", StringComparison.OrdinalIgnoreCase) ||
@@ -329,6 +336,7 @@ public class Scrapper
                         else if (headerName.Equals("Supported languages", StringComparison.OrdinalIgnoreCase) ||
                                  headerName.Equals("対応言語", StringComparison.OrdinalIgnoreCase) ||
                                  headerName.Equals("对应语言", StringComparison.OrdinalIgnoreCase) ||
+                                 headerName.Equals("支持的语言", StringComparison.OrdinalIgnoreCase) ||
                                  headerName.Equals("對應語言", StringComparison.OrdinalIgnoreCase) ||
                                  headerName.Equals("대응 언어", StringComparison.OrdinalIgnoreCase))
                         {
@@ -438,15 +446,22 @@ public class Scrapper
                 .ForEach(work =>
                 {
                     var workNo = work.WorkNo;
-                    var url = (work.IsAna == true)
-                        ? $"https://www.dlsite.com/soft/announce/=/product_id/{workNo}.html"
-                        : $"https://www.dlsite.com/soft/work/=/product_id/{workNo}.html";
+                    var suggestionUrl = $"https://www.dlsite.com/maniax/work/=/product_id/{workNo}.html";
+                    if (work.IsAna == true)
+                    {
+                        suggestionUrl = $"https://www.dlsite.com/soft/announce/=/product_id/{workNo}.html";
+                    }
+                    else if (workNo?.StartsWith("VJ") == true)
+                    {
+                        suggestionUrl = $"https://www.dlsite.com/soft/work/=/product_id/{workNo}.html";
+                    }
                     var searchItem = new SearchResult(work.WorkName,
-                        url
+                        suggestionUrl
                     );
                     results.Add(searchItem);
                 });
         }
+
         return results;
     }
 

@@ -13,6 +13,7 @@ public class ScrapperResult
     public DateTime DateReleased { get; set; } = DateTime.MinValue;
     public DateTime DateUpdated { get; set; } = DateTime.MinValue;
     public string? SeriesNames { get; set; }
+    public string? Author { get; set; }
     public List<string>? ScenarioWriters { get; set; }
     public List<string>? Illustrators { get; set; }
     public List<string>? VoiceActors { get; set; }

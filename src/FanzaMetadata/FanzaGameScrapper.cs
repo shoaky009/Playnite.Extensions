@@ -8,6 +8,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using AngleSharp;
+using AngleSharp.Common;
 using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
 using AngleSharp.Text;
@@ -123,7 +124,7 @@ public class FanzaGameScrapper : IScrapper
         };
         if (link.StartsWith(BaseGamePageUrl, StringComparison.OrdinalIgnoreCase))
         {
-            result.Title = document.QuerySelector(".productTitle .productTitle__headline")?.Text().Trim();
+            result.Title = document.QuerySelector(".productTitle__item")?.Text().Trim();
             var detailTop = document.QuerySelectorAll(".contentsDetailTop__tableRow")
                 .GroupBy(x => x.Children.First().Text().Trim())
                 .ToDictionary(x => x.Key, x => x.First().Children.Last().Text().Trim());
@@ -159,7 +160,8 @@ public class FanzaGameScrapper : IScrapper
                 .GroupBy(x => x.Children.First().Text().Trim())
                 .ToDictionary(x => x.Key, x => x.First().Children.Last());
 
-            var dateStr = detailBottom["配信開始日"]?.Text().Trim();
+            var dateKey = detailBottom.Keys.First(x => x.Contains("配信"));
+            var dateStr = detailBottom.GetOrDefault(dateKey, null)?.Text().Trim().SplitSpaces().First();
             if (DateTime.TryParseExact(dateStr, "yyyy/MM/dd", null, DateTimeStyles.None, out var releaseDate))
             {
                 result.ReleaseDate = releaseDate;
@@ -180,6 +182,7 @@ public class FanzaGameScrapper : IScrapper
 
             var tags = detailBottom["ジャンル"]?.GetElementsByTagName("a")
                 .Select(x => x.Text().Trim())
+                .Where(x => !x.Contains("感謝祭"))
                 .ToList();
             result.Genres = tags;
 

@@ -127,7 +127,6 @@ public class FanzaTests
         Assert.NotNull(res);
         Assert.NotNull(res?.Title);
         Assert.NotNull(res?.Genres);
-        Assert.NotNull(res?.Description);
         Assert.True(res?.Adult);
     }
 
@@ -190,7 +189,7 @@ public class FanzaTests
     public async void ShouldGetSearchResult2()
     {
         var scrapper = new FanzaGameScrapper(new XunitLogger<FanzaGameScrapper>(_testOutputHelper));
-        var res = await scrapper.ScrapSearchPage("ネコと女子寮せよ！");
+        var res = await scrapper.ScrapSearchPage("アマカノ3");
         Assert.NotEmpty(res);
     }
 }

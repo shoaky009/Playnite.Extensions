@@ -74,11 +74,20 @@ public class DLSiteTests
 
 
     [Theory]
-    [InlineData("https://www.dlsite.com/pro/work/=/product_id/VJ009290.html")]
+    [InlineData("https://www.dlsite.com/maniax/work/=/product_id/RJ01326398.html")]
     public async Task ShouldGetScrapperResult(string url)
     {
         var scrapper = new Scrapper(new XunitLogger<Scrapper>(_testOutputHelper), new HttpClientHandler());
-        var results = await scrapper.ScrapGamePage(url, CancellationToken.None);
+        var results = await scrapper.ScrapGamePage(url, CancellationToken.None, "zh_CN");
+        Assert.NotNull(results);
+    }
+
+    [Theory]
+    [InlineData("エッチで一途なド田舎兄さまと、古式ゆかしい病弱妹")]
+    public async Task ShouldGetSearchResult(string text)
+    {
+        var scrapper = new Scrapper(new XunitLogger<Scrapper>(_testOutputHelper), new HttpClientHandler());
+        var results = await scrapper.ScrapSearchPage(text, CancellationToken.None);
         Assert.NotNull(results);
     }
 
