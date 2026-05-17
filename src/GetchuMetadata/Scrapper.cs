@@ -118,6 +118,17 @@ public class Scrapper
             }
         }
 
+        var p2Name = "イラスト";
+        if (productDetailDir.ContainsKey(p2Name))
+        {
+            var str = productDetailDir[p2Name]?.Text();
+            if (str != null)
+            {
+                str = str.Trim();
+                res.Illustrators.AddRange(str.Split('、'));
+            }
+        }
+
         var idkName = "シナリオ";
         if (productDetailDir.ContainsKey(idkName))
         {
@@ -158,24 +169,18 @@ public class Scrapper
         var genresName = "カテゴリ";
         if (productDetailDir.ContainsKey(genresName))
         {
-            var str = productDetailDir[genresName]?.FirstChild?.Text();
-            if (str != null)
-            {
-                str = str.Trim();
-                res.Genres = new List<string>(
-                    str.Split('、')
-                ).Where(x => !string.IsNullOrEmpty(x)).ToList();
-                ;
-            }
+            res.Genres = productDetailDir[genresName]
+                ?.ChildNodes
+                ?.QuerySelectorAll("a")
+                ?.Select(x => x.InnerHtml)
+                ?.Where(x => !x.Contains("一覧"))
+                ?.ToList();
         }
 
-        res.ProductImages = document.QuerySelectorAll(".tabletitle")
-            .Where(ele => ele.Text().Contains("サンプル画像"))
-            .SelectMany(ele => ele.NextElementSibling?.Children)
-            .Select(x => x as IHtmlAnchorElement)
-            .Where(x => x != null)
-            .Cast<IHtmlAnchorElement>()
-            .Select(ele => ele.Href)
+        res.ProductImages = document.QuerySelectorAll(".item-Samplecard-container img")
+            .Select(img => img.GetAttribute("src"))
+            .Where(src => !string.IsNullOrEmpty(src))
+            .Select(src => new Uri(new Uri(document.Url), src).AbsoluteUri)
             .ToList();
 
         _logger.Log(LogLevel.Information, "Getchu result:{res}", JsonConvert.SerializeObject(res));
