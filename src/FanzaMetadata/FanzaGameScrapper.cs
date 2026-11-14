@@ -87,16 +87,14 @@ public class FanzaGameScrapper : IScrapper
 
         await Console.Out.WriteAsync(document.Title);
 
-        var dlResults = document
-            .QuerySelectorAll(".component-legacy-productTile .component-legacy-productTile__detailLink")
-            .Where(element => !string.IsNullOrEmpty(element.HyperReference("")?.Href))
-            .Select(element =>
+        var dlResults = document.QuerySelectorAll(".productList .productListItem .component-cardProductBuy__detailLink")
+            .Where(element => !string.IsNullOrEmpty(element.HyperReference("")?.Href)).Select(element =>
                 {
-                    var title = element.GetElementsByClassName("component-legacy-productTile__title").First().Text();
                     var anchorElement = (IHtmlAnchorElement)element;
+                    var title = anchorElement.Title ?? "";
                     var href = anchorElement.Href;
                     var id = new Uri(href).Segments.Last().Replace("/", "");
-                    return new SearchResult(title, id, href);
+                    return new SearchResult(title , id, href);
                 }
             ).ToList();
         if (dlResults.Count > 0)
